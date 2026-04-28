@@ -11,8 +11,8 @@ proxy:
 # Dashboard quản trị (Replit hiển thị ở cổng 5000)
 dashboard:
   port: 5000
-  username: ""                        # Trống = tắt Basic Auth
-  password: ""
+  username: "admin"                        # Trống = tắt Basic Auth
+  password: "admin"
 
 # Backend mẫu để bạn test ngay (tắt nếu đã có upstream thật)
 demoBackend:
