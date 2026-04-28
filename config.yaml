@@ -1,0 +1,61 @@
+# ───────────────────────────────────────────────────────────────
+#  Mini Shield — Cấu hình
+# ───────────────────────────────────────────────────────────────
+
+# Cổng proxy (nơi client truy cập)
+proxy:
+  port: 8080
+  upstream: "https://sex.launa.rf.gd"  # Domain được bảo vệ
+  trustProxy: true                    # Đọc IP thật từ X-Forwarded-For
+
+# Dashboard quản trị (Replit hiển thị ở cổng 5000)
+dashboard:
+  port: 5000
+  username: ""                        # Trống = tắt Basic Auth
+  password: ""
+
+# Backend mẫu để bạn test ngay (tắt nếu đã có upstream thật)
+demoBackend:
+  enabled: false
+  port: 8081
+
+# Giới hạn tốc độ theo IP
+rateLimit:
+  enabled: true
+  windowMs: 1000                      # Cửa sổ 1 giây
+  maxRequests: 30                     # Tối đa 30 req/s
+  burst: 60                           # Cho phép bùng nổ ngắn 60 req
+
+# Tự động ban IP khi vi phạm liên tục
+ban:
+  enabled: true
+  maxViolations: 5                    # 5 lần vi phạm trong window
+  durationMs: 600000                  # Cấm 10 phút
+
+# WAF — Tường lửa ứng dụng (kiểm tra URL, query, body, header)
+waf:
+  enabled: true
+  blockOnMatch: true                  # false = chỉ log, không chặn
+  maxBodyBytes: 65536                 # Bỏ qua body lớn hơn 64KB
+
+# Phát hiện bot bằng User-Agent + heuristic
+botDetect:
+  enabled: true
+  blockEmptyUA: true
+  blockKnownBadUA: true               # curl/wget/python-requests/...
+
+# Thử thách JS Proof-of-Work khi nghi ngờ
+challenge:
+  enabled: true
+  difficulty: 4                       # Số ký tự '0' đầu của hash SHA256
+  cookieName: "ms_pow"
+  cookieTTLms: 3600000                # Token hợp lệ 1 giờ
+  triggerWhenSuspicious: true         # Bật khi bot/UA xấu/IP nghi ngờ
+
+# Danh sách trắng / đen
+whitelistIps: []                      # VD: ["127.0.0.1", "10.0.0.0/8"]
+blacklistIps: []
+
+# Ghi log
+logging:
+  level: "info"                       # debug | info | warn | error
