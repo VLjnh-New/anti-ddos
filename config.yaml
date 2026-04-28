@@ -1,61 +1,73 @@
 # ───────────────────────────────────────────────────────────────
-#  Mini Shield — Cấu hình
+#  Mini Shield — Config tối ưu cho REST API (LauNa)
+#  Đã tắt các tính năng gây false-positive với bot/script clients
 # ───────────────────────────────────────────────────────────────
 
-# Cổng proxy (nơi client truy cập)
 proxy:
   port: 8080
-  upstream: "https://sex.launa.rf.gd"  # Domain được bảo vệ
-  trustProxy: true                    # Đọc IP thật từ X-Forwarded-For
+  upstream: "https://sex.launa.rf.gd"   # ← ĐỔI: URL LauNa của bạn
+  trustProxy: true                            # đọc IP thật qua CF
+  proxyTimeout: 1200000
+  # 2 phút cho AI streaming
 
-# Dashboard quản trị (Replit hiển thị ở cổng 5000)
 dashboard:
   port: 5000
-  username: "admin"                        # Trống = tắt Basic Auth
-  password: "admin"
+  username: "admin"
+  password: "ĐỔI-MẬT-KHẨU-MẠNH-TẠI-ĐÂY"      # ← ĐỔI ngay
 
-# Backend mẫu để bạn test ngay (tắt nếu đã có upstream thật)
 demoBackend:
   enabled: false
-  port: 8081
 
-# Giới hạn tốc độ theo IP
+# ─── Rate limit: TẮT ──────────────────────────────────────────
+# Lý do: Cloudflare đứng trước → Mini Shield thấy IP CF, không
+# rate-limit đúng được. Đã có ddos.js trong LauNa lo việc này.
 rateLimit:
-  enabled: true
-  windowMs: 1000                      # Cửa sổ 1 giây
-  maxRequests: 30                     # Tối đa 30 req/s
-  burst: 60                           # Cho phép bùng nổ ngắn 60 req
+  enabled: false
+  windowMs: 1000
+  maxRequests: 30
+  burst: 60
 
-# Tự động ban IP khi vi phạm liên tục
+# ─── Auto-ban: TẮT ────────────────────────────────────────────
+# LauNa đã có cơ chế ban riêng (data/block/listIP.json),
+# tránh 2 tầng ban xung đột nhau khó debug.
 ban:
-  enabled: true
-  maxViolations: 5                    # 5 lần vi phạm trong window
-  durationMs: 600000                  # Cấm 10 phút
+  enabled: false
+  maxViolations: 5
+  durationMs: 600000
 
-# WAF — Tường lửa ứng dụng (kiểm tra URL, query, body, header)
+# ─── WAF: BẬT nhưng chỉ LOG, KHÔNG chặn ──────────────────────
+# Lý do: API nhận prompt AI, share-file content, URL có ký tự lạ
+# → blockOnMatch=true sẽ chặn nhầm rất nhiều request hợp lệ.
+# Đặt blockOnMatch=false để chỉ ghi log, bạn xem dashboard để
+# theo dõi traffic đáng ngờ rồi quyết định ban thủ công.
 waf:
   enabled: true
-  blockOnMatch: true                  # false = chỉ log, không chặn
-  maxBodyBytes: 65536                 # Bỏ qua body lớn hơn 64KB
+  blockOnMatch: false
+  maxBodyBytes: 0          # 0 = không kiểm tra body (cho upload audio/ảnh lớn)
 
-# Phát hiện bot bằng User-Agent + heuristic
+# ─── Bot detect: TẮT ──────────────────────────────────────────
+# LauNa được gọi từ axios, python-requests, okhttp, Telegram bot…
+# UA của các thư viện này nằm trong "known bad" → bị chặn nhầm.
 botDetect:
-  enabled: true
-  blockEmptyUA: true
-  blockKnownBadUA: true               # curl/wget/python-requests/...
+  enabled: false
+  blockEmptyUA: false
+  blockKnownBadUA: false
 
-# Thử thách JS Proof-of-Work khi nghi ngờ
+# ─── JS PoW challenge: TẮT ────────────────────────────────────
+# Bot/mobile app không có JS engine → không giải được → 403 vĩnh viễn.
 challenge:
-  enabled: true
-  difficulty: 4                       # Số ký tự '0' đầu của hash SHA256
+  enabled: false
+  difficulty: 4
   cookieName: "ms_pow"
-  cookieTTLms: 3600000                # Token hợp lệ 1 giờ
-  triggerWhenSuspicious: true         # Bật khi bot/UA xấu/IP nghi ngờ
+  cookieTTLms: 3600000
+  triggerWhenSuspicious: false
 
-# Danh sách trắng / đen
-whitelistIps: []                      # VD: ["127.0.0.1", "10.0.0.0/8"]
-blacklistIps: []
+# ─── White / Blacklist ────────────────────────────────────────
+whitelistIps:
+  # - "1.2.3.4"           # IP server bot Telegram của bạn
+  # - "5.6.7.0/24"        # IP range của VPS
 
-# Ghi log
+blacklistIps: []          # ban thủ công IP xấu phát hiện qua dashboard
+
 logging:
-  level: "info"                       # debug | info | warn | error
+  level: "info"
